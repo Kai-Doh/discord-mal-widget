@@ -2,6 +2,7 @@ from dotenv import load_dotenv
 import requests
 from os import getenv
 import datetime
+import time
 
 load_dotenv()
 
@@ -13,8 +14,20 @@ REQUEST_HEADERS = {
 
 username = getenv("MAL_USERNAME")
 
-jikan_response = requests.get("https://api.jikan.moe/v4/users/{}/full".format(username))
+JIKAN_RETRY_DELAYS = [10, 20, 40, 60, 60]
+
+for attempt, delay in enumerate([0] + JIKAN_RETRY_DELAYS, start=1):
+    if delay:
+        print(f"Jikan request failed, retrying in {delay}s (attempt {attempt})...")
+        time.sleep(delay)
+    jikan_response = requests.get("https://api.jikan.moe/v4/users/{}/full".format(username))
+    if jikan_response.ok:
+        break
+
+if not jikan_response.ok:
+    print("Jikan did not return a successful response after retries, giving up for this run.")
 jikan_response.raise_for_status()
+
 user = jikan_response.json()
 
 avatarurl = user['data']['images']['jpg']['image_url']
