@@ -1,7 +1,6 @@
 from dotenv import load_dotenv
 import requests
 from os import getenv
-from jikanpy import Jikan
 import datetime
 
 load_dotenv()
@@ -12,10 +11,11 @@ REQUEST_HEADERS = {
     'User-Agent': "DiscordBot (https://github.com/discord/discord-api-docs, 1.0.0)"
 }
 
-jikan = Jikan()
 username = getenv("MAL_USERNAME")
 
-user = jikan.users(username=username, extension='full')
+jikan_response = requests.get("https://api.jikan.moe/v4/users/{}/full".format(username))
+jikan_response.raise_for_status()
+user = jikan_response.json()
 
 avatarurl = user['data']['images']['jpg']['image_url']
 anime_list = user['data']['statistics']['anime']
